@@ -88,9 +88,15 @@ def fetch_district(postcode_district):
             print("  AUTH ERROR — check EPC_API_EMAIL / EPC_API_KEY secrets.")
             break
         if r.status_code != 200:
-            print(f"  {postcode_district}: HTTP {r.status_code}")
+            print(f"  {postcode_district}: HTTP {r.status_code} — body: {r.text[:300]}")
             break
-        data = r.json()
+        try:
+            data = r.json()
+        except Exception as e:
+            print(f"  {postcode_district}: response wasn't valid JSON ({e})")
+            print(f"    content-type: {r.headers.get('content-type')}")
+            print(f"    body preview: {r.text[:300]!r}")
+            break
         rows = data.get("rows", [])
         if not rows:
             break
@@ -210,4 +216,11 @@ def run():
           "before outreach (Land Registry / Companies House / agent listing).")
 
 if __name__ == "__main__":
-    run()
+    import traceback
+    try:
+        print(f"EPC_API_EMAIL set: {bool(EPC_API_EMAIL)} | EPC_API_KEY set: {bool(EPC_API_KEY)} | MONDAY_API_TOKEN set: {bool(MONDAY_API_TOKEN)}")
+        run()
+    except Exception:
+        print("=== UNHANDLED EXCEPTION ===")
+        traceback.print_exc()
+        raise
