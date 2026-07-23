@@ -23,6 +23,7 @@ import requests
 import os
 import time
 import base64
+import json
 from datetime import datetime
 
 def _cfg(name, default=""):
@@ -70,43 +71,6 @@ def _auth_header():
     token = base64.b64encode(f"{EPC_API_EMAIL}:{EPC_API_KEY}".encode()).decode()
     return {"Authorization": f"Basic {token}", "Accept": "application/json"}
 
-def fetch_district(postcode_district):
-    """Fetch non-domestic EPC certificates for a postcode district.
-    Paginates via the search-after cursor the API returns."""
-    results = []
-    search_after = None
-    for _ in range(20):  # safety cap on pagination
-        params = {"postcode": postcode_district, "size": 100}
-        if search_after:
-            params["search-after"] = search_after
-        try:
-            r = requests.get(EPC_BASE, headers=_auth_header(), params=params, timeout=20)
-        except Exception as e:
-            print(f"  {postcode_district}: request error — {e}")
-            break
-        if r.status_code == 401:
-            print("  AUTH ERROR — check EPC_API_EMAIL / EPC_API_KEY secrets.")
-            break
-        if r.status_code != 200:
-            print(f"  {postcode_district}: HTTP {r.status_code} — body: {r.text[:300]}")
-            break
-        try:
-            data = r.json()
-        except Exception as e:
-            print(f"  {postcode_district}: response wasn't valid JSON ({e})")
-            print(f"    content-type: {r.headers.get('content-type')}")
-            print(f"    body preview: {r.text[:300]!r}")
-            break
-        rows = data.get("rows", [])
-        if not rows:
-            break
-        results.extend(rows)
-        search_after = r.headers.get("X-Next-Search-After")
-        if not search_after or len(rows) < 100:
-            break
-        time.sleep(0.3)
-    return results
-
 def is_office(row):
     ptype = (row.get("property-type") or "").lower()
     return "office" in ptype or "b1" in ptype
@@ -124,22 +88,6 @@ def passes_filters(row):
     if area and not (MIN_FLOOR_AREA <= area <= MAX_FLOOR_AREA):
         return False
     return True
-
-def fetch_all():
-    print("=" * 60)
-    print(f"SHATRO EPC Scanner — {datetime.now().strftime('%d %b %Y %H:%M')}")
-    print("=" * 60)
-    if not EPC_API_EMAIL or not EPC_API_KEY:
-        print("Missing EPC_API_EMAIL / EPC_API_KEY — register free at "
-              "https://epc.opendatacommunities.org/login and set these as secrets.")
-        return []
-    all_rows = []
-    for district in TARGET_POSTCODE_DISTRICTS:
-        rows = fetch_district(district)
-        kept = [r for r in rows if passes_filters(r)]
-        print(f"  {district}: {len(rows)} certificates, {len(kept)} match (office, below C, {MIN_FLOOR_AREA}-{MAX_FLOOR_AREA} sqm)")
-        all_rows.extend(kept)
-    return all_rows
 
 def monday_api(query, variables):
     try:
@@ -191,36 +139,119 @@ def add_to_board(row):
                      create_labels_if_missing: true) { id }
     }
     """
-    res = monday_api(mut, {"b": MONDAY_BOARD_ID, "n": address[:255], "cv": __import__("json").dumps(col)})
+    res = monday_api(mut, {"b": MONDAY_BOARD_ID, "n": address[:255], "cv": json.dumps(col)})
     item = ((res or {}).get("data") or {}).get("create_item") or {}
     return item.get("id")
 
+LOG_ITEM_NAME = "⚙️ Last Run Log"
+
+def log_to_monday(summary_lines):
+    """Write a run summary to a fixed item on the EPC board (create once,
+    then update it each run) — a reliable audit trail that doesn't depend
+    on reading GitHub Actions logs."""
+    text = "\n".join(summary_lines)[:4000]
+    q = """query ($b: ID!) { boards(ids: [$b]) { items_page(limit: 500) { items { id name } } } }"""
+    res = monday_api(q, {"b": MONDAY_BOARD_ID})
+    items = ((res or {}).get("data", {}).get("boards", [{}])[0]
+             .get("items_page", {}).get("items", []))
+    existing = next((i for i in items if i["name"] == LOG_ITEM_NAME), None)
+    col = json.dumps({COL_NOTES: {"text": text}})
+    if existing:
+        mut = """
+        mutation ($b: ID!, $i: ID!, $cv: JSON!) {
+            change_multiple_column_values(board_id: $b, item_id: $i, column_values: $cv) { id }
+        }
+        """
+        monday_api(mut, {"b": MONDAY_BOARD_ID, "i": existing["id"], "cv": col})
+    else:
+        mut = """
+        mutation ($b: ID!, $n: String!, $cv: JSON!) {
+            create_item(board_id: $b, item_name: $n, column_values: $cv) { id }
+        }
+        """
+        monday_api(mut, {"b": MONDAY_BOARD_ID, "n": LOG_ITEM_NAME, "cv": col})
+
 def run():
-    rows = fetch_all()
-    print(f"\nTotal matches across all districts: {len(rows)}")
-    if not rows:
-        return
-    existing = get_existing_addresses()
-    added = 0
-    for row in rows:
-        address = row.get("address", "") or "Unknown address"
-        if address[:255] in existing:
-            continue
-        if add_to_board(row):
-            added += 1
-            print(f"  Added: {address}")
+    log_lines = []
+    def log(msg):
+        print(msg)
+        log_lines.append(str(msg))
+
+    try:
+        log("=" * 60)
+        log(f"SHATRO EPC Scanner run — {datetime.now().strftime('%d %b %Y %H:%M')} UTC")
+        log(f"EPC_API_EMAIL set: {bool(EPC_API_EMAIL)} | EPC_API_KEY set: {bool(EPC_API_KEY)} | MONDAY_API_TOKEN set: {bool(MONDAY_API_TOKEN)}")
+        log("=" * 60)
+
+        if not EPC_API_EMAIL or not EPC_API_KEY:
+            log("STOPPED: Missing EPC_API_EMAIL / EPC_API_KEY secret(s).")
+            return
+
+        all_rows = []
+        for district in TARGET_POSTCODE_DISTRICTS:
+            rows = fetch_district_logged(district, log)
+            kept = [r for r in rows if passes_filters(r)]
+            log(f"  {district}: {len(rows)} certificates fetched, {len(kept)} match filters")
+            all_rows.extend(kept)
+
+        log(f"\nTotal matches across all districts: {len(all_rows)}")
+        if not all_rows:
+            log("No matching buildings found this run.")
+            return
+
+        existing = get_existing_addresses()
+        added = 0
+        for row in all_rows:
+            address = row.get("address", "") or "Unknown address"
+            if address[:255] in existing:
+                continue
+            if add_to_board(row):
+                added += 1
+                log(f"  Added: {address}")
+            time.sleep(0.3)
+        log(f"\nDone — {added} new building(s) added to the EPC board.")
+    except Exception:
+        import traceback
+        log("=== UNHANDLED EXCEPTION ===")
+        log(traceback.format_exc())
+        raise
+    finally:
+        log_to_monday(log_lines)
+
+def fetch_district_logged(postcode_district, log):
+    """Same as fetch_district but reports errors via the log() callback
+    too, so they end up in the Monday audit trail, not just stdout."""
+    results = []
+    search_after = None
+    for _ in range(20):
+        params = {"postcode": postcode_district, "size": 100}
+        if search_after:
+            params["search-after"] = search_after
+        try:
+            r = requests.get(EPC_BASE, headers=_auth_header(), params=params, timeout=20)
+        except Exception as e:
+            log(f"  {postcode_district}: request error — {e}")
+            break
+        if r.status_code == 401:
+            log(f"  {postcode_district}: AUTH ERROR (401) — check EPC_API_EMAIL / EPC_API_KEY.")
+            break
+        if r.status_code != 200:
+            log(f"  {postcode_district}: HTTP {r.status_code} — {r.text[:200]}")
+            break
+        try:
+            data = r.json()
+        except Exception as e:
+            log(f"  {postcode_district}: non-JSON response ({e}) — content-type={r.headers.get('content-type')}, body={r.text[:200]!r}")
+            break
+        rows = data.get("rows", [])
+        if not rows:
+            break
+        results.extend(rows)
+        search_after = r.headers.get("X-Next-Search-After")
+        if not search_after or len(rows) < 100:
+            break
         time.sleep(0.3)
-    print(f"\nDone — {added} new building(s) added to the EPC board.")
-    print("NOTE: managing agent / landlord is NOT auto-populated — the EPC "
-          "register doesn't carry this. Fill it in manually per building "
-          "before outreach (Land Registry / Companies House / agent listing).")
+    return results
 
 if __name__ == "__main__":
-    import traceback
-    try:
-        print(f"EPC_API_EMAIL set: {bool(EPC_API_EMAIL)} | EPC_API_KEY set: {bool(EPC_API_KEY)} | MONDAY_API_TOKEN set: {bool(MONDAY_API_TOKEN)}")
-        run()
-    except Exception:
-        print("=== UNHANDLED EXCEPTION ===")
-        traceback.print_exc()
-        raise
+    run()
