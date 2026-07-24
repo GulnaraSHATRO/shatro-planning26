@@ -1240,23 +1240,22 @@ if __name__ == "__main__":
             mode = arg.split("=", 1)[1]
 
     if mode == "auto":
-        # Manual runs (workflow_dispatch, or running the script directly)
-        # should always actually do something — the hour-gate is only for
-        # the unattended hourly cron trigger.
-        if _cfg("GITHUB_EVENT_NAME", "") == "workflow_dispatch":
-            print("Manually triggered (workflow_dispatch) — running scrape directly, ignoring time gate.")
-            mode = "scrape"
-        else:
-            # Workflow runs hourly; the script decides what to do based on
-            # Europe/London local time, so 9am/10am stay correct across BST/GMT.
-            hour = _london_hour()
-            if hour == 9:
-                mode = "scrape"
-            elif hour == 10:
-                mode = "digest"
-            else:
-                print(f"London local hour is {hour}:00 — nothing scheduled, exiting.")
-                sys.exit(0)
+        # GitHub Actions scheduled triggers are NOT guaranteed to fire at
+        # the exact minute requested — on a low-activity repo they can be
+        # delayed by hours. Gating on the exact London hour was too
+        # fragile (confirmed: a run meant for ~9-11am UTC actually fired
+        # at 13:14 UTC and did nothing). So "auto" now just does both
+        # steps back-to-back, once per invocation, whenever GitHub
+        # actually runs it — no hour-matching required.
+        mode = "scrape+digest"
+
+    if mode == "digest":
+        run_digest()
+    elif mode == "scrape+digest":
+        run()
+        run_digest()
+    else:
+        run()
 
     if mode == "digest":
         run_digest()
