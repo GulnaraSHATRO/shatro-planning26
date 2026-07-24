@@ -171,6 +171,14 @@ def log_to_monday(summary_lines):
         """
         monday_api(mut, {"b": MONDAY_BOARD_ID, "n": LOG_ITEM_NAME, "cv": col})
 
+def _fingerprint(token):
+    """Non-secret fingerprint so we can tell if the GitHub-stored secret
+    actually matches the value we think it should be, without ever
+    printing the real token."""
+    if not token:
+        return "EMPTY"
+    return f"len={len(token)} starts={token[:6]!r} ends={token[-6:]!r}"
+
 def run():
     log_lines = []
     def log(msg):
@@ -180,6 +188,7 @@ def run():
     try:
         log("=" * 60)
         log(f"SHATRO EPC Scanner run — {datetime.now().strftime('%d %b %Y %H:%M')} UTC")
+        log(f"MONDAY_API_TOKEN fingerprint: {_fingerprint(MONDAY_API_TOKEN)}")
         log(f"EPC_API_EMAIL set: {bool(EPC_API_EMAIL)} | EPC_API_KEY set: {bool(EPC_API_KEY)} | MONDAY_API_TOKEN set: {bool(MONDAY_API_TOKEN)}")
         log("=" * 60)
 
@@ -217,6 +226,11 @@ def run():
         raise
     finally:
         log_to_monday(log_lines)
+        try:
+            with open("last_run_log.txt", "w") as f:
+                f.write("\n".join(log_lines))
+        except Exception as e:
+            print(f"Could not write local log file: {e}")
 
 def fetch_district_logged(postcode_district, log):
     """Same as fetch_district but reports errors via the log() callback
