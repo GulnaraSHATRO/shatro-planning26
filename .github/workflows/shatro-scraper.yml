@@ -2,13 +2,13 @@ name: Shatro Planning & EPC Scraper
 
 on:
   schedule:
-    # Runs hourly 06:00–11:00 UTC; shatro_planning_v2.py checks the actual
-    # Europe/London local time itself and only acts at 9am (scrape) or
-    # 10am (digest) local time — this keeps it correct across BST/GMT
-    # without needing to edit the cron when the clocks change.
-    - cron: '0 6-11 * * *'
+    # Once daily. GitHub doesn't guarantee this fires at exactly 09:00 —
+    # on a low-activity repo it can drift by a while — but the script now
+    # does scrape+digest together in one go whenever it actually runs,
+    # so drift no longer means a wasted no-op day.
+    - cron: '0 9 * * *'
     # EPC register changes far less often than planning applications —
-    # once a week (Monday 06:30 UTC) is plenty.
+    # once a week (Monday) is plenty.
     - cron: '30 6 * * 1'
   workflow_dispatch:
     inputs:
@@ -26,7 +26,7 @@ jobs:
   planning:
     runs-on: ubuntu-latest
     timeout-minutes: 120
-    if: github.event.schedule == '0 6-11 * * *' || (github.event_name == 'workflow_dispatch' && (github.event.inputs.job == 'both' || github.event.inputs.job == 'planning'))
+    if: github.event.schedule == '0 9 * * *' || (github.event_name == 'workflow_dispatch' && (github.event.inputs.job == 'both' || github.event.inputs.job == 'planning'))
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-python@v5
