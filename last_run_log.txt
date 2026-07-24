@@ -1,0 +1,32 @@
+============================================================
+SHATRO EPC Scanner run — 24 Jul 2026 07:38 UTC
+MONDAY_API_TOKEN fingerprint: len=229 starts='\teyJhb' ends='Xipez0'
+EPC_API_EMAIL set: True | EPC_API_KEY set: True | MONDAY_API_TOKEN set: True
+============================================================
+  W1D: non-JSON response (Expecting value: line 1 column 1 (char 0)) — content-type=text/html;charset=utf-8, body='<!DOCTYPE html>\n<html lang="en" class="govuk-template--rebranded">\n<head>\n  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">\n  <meta name="viewport" content="width=device-width, ini'
+  W1D: 0 certificates fetched, 0 match filters
+  W1F: non-JSON response (Expecting value: line 1 column 1 (char 0)) — content-type=text/html;charset=utf-8, body='<!DOCTYPE html>\n<html lang="en" class="govuk-template--rebranded">\n<head>\n  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">\n  <meta name="viewport" content="width=device-width, ini'
+  W1F: 0 certificates fetched, 0 match filters
+  W1T: non-JSON response (Expecting value: line 1 column 1 (char 0)) — content-type=text/html;charset=utf-8, body='<!DOCTYPE html>\n<html lang="en" class="govuk-template--rebranded">\n<head>\n  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">\n  <meta name="viewport" content="width=device-width, ini'
+  W1T: 0 certificates fetched, 0 match filters
+  W1W: non-JSON response (Expecting value: line 1 column 1 (char 0)) — content-type=text/html;charset=utf-8, body='<!DOCTYPE html>\n<html lang="en" class="govuk-template--rebranded">\n<head>\n  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">\n  <meta name="viewport" content="width=device-width, ini'
+  W1W: 0 certificates fetched, 0 match filters
+  EC2A: non-JSON response (Expecting value: line 1 column 1 (char 0)) — content-type=text/html;charset=utf-8, body='<!DOCTYPE html>\n<html lang="en" class="govuk-template--rebranded">\n<head>\n  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">\n  <meta name="viewport" content="width=device-width, ini'
+  EC2A: 0 certificates fetched, 0 match filters
+  E1: non-JSON response (Expecting value: line 1 column 1 (char 0)) — content-type=text/html;charset=utf-8, body='<!DOCTYPE html>\n<html lang="en" class="govuk-template--rebranded">\n<head>\n  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">\n  <meta name="viewport" content="width=device-width, ini'
+  E1: 0 certificates fetched, 0 match filters
+  E2: non-JSON response (Expecting value: line 1 column 1 (char 0)) — content-type=text/html;charset=utf-8, body='<!DOCTYPE html>\n<html lang="en" class="govuk-template--rebranded">\n<head>\n  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">\n  <meta name="viewport" content="width=device-width, ini'
+  E2: 0 certificates fetched, 0 match filters
+  EC1V: non-JSON response (Expecting value: line 1 column 1 (char 0)) — content-type=text/html;charset=utf-8, body='<!DOCTYPE html>\n<html lang="en" class="govuk-template--rebranded">\n<head>\n  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">\n  <meta name="viewport" content="width=device-width, ini'
+  EC1V: 0 certificates fetched, 0 match filters
+  EC1M: non-JSON response (Expecting value: line 1 column 1 (char 0)) — content-type=text/html;charset=utf-8, body='<!DOCTYPE html>\n<html lang="en" class="govuk-template--rebranded">\n<head>\n  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">\n  <meta name="viewport" content="width=device-width, ini'
+  EC1M: 0 certificates fetched, 0 match filters
+  EC1R: non-JSON response (Expecting value: line 1 column 1 (char 0)) — content-type=text/html;charset=utf-8, body='<!DOCTYPE html>\n<html lang="en" class="govuk-template--rebranded">\n<head>\n  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">\n  <meta name="viewport" content="width=device-width, ini'
+  EC1R: 0 certificates fetched, 0 match filters
+  WC2H: non-JSON response (Expecting value: line 1 column 1 (char 0)) — content-type=text/html;charset=utf-8, body='<!DOCTYPE html>\n<html lang="en" class="govuk-template--rebranded">\n<head>\n  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">\n  <meta name="viewport" content="width=device-width, ini'
+  WC2H: 0 certificates fetched, 0 match filters
+  WC2E: non-JSON response (Expecting value: line 1 column 1 (char 0)) — content-type=text/html;charset=utf-8, body='<!DOCTYPE html>\n<html lang="en" class="govuk-template--rebranded">\n<head>\n  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">\n  <meta name="viewport" content="width=device-width, ini'
+  WC2E: 0 certificates fetched, 0 match filters
+
+Total matches across all districts: 0
+No matching buildings found this run.
