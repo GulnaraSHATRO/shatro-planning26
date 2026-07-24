@@ -1,6 +1,6 @@
 ============================================================
-SHATRO EPC Scanner run — 24 Jul 2026 07:38 UTC
-MONDAY_API_TOKEN fingerprint: len=229 starts='\teyJhb' ends='Xipez0'
+SHATRO EPC Scanner run — 24 Jul 2026 07:41 UTC
+MONDAY_API_TOKEN fingerprint: len=228 starts='eyJhbG' ends='Xipez0'
 EPC_API_EMAIL set: True | EPC_API_KEY set: True | MONDAY_API_TOKEN set: True
 ============================================================
   W1D: non-JSON response (Expecting value: line 1 column 1 (char 0)) — content-type=text/html;charset=utf-8, body='<!DOCTYPE html>\n<html lang="en" class="govuk-template--rebranded">\n<head>\n  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">\n  <meta name="viewport" content="width=device-width, ini'
