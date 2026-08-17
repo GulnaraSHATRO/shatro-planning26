@@ -1,5 +1,5 @@
 ============================================================
-SHATRO EPC Scanner run — 10 Aug 2026 10:45 UTC
+SHATRO EPC Scanner run — 17 Aug 2026 08:26 UTC
 MONDAY_API_TOKEN fingerprint: len=228 starts='eyJhbG' ends='Xipez0'
 EPC_API_EMAIL set: True | EPC_API_KEY set: True | MONDAY_API_TOKEN set: True
 ============================================================
